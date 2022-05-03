@@ -2,6 +2,35 @@
 from lxml import html
 import requests
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+
+def extract_data_from_url(link):
+    page = requests.get(link)
+    tree = html.fromstring(page.content)
+    # Find email and add to list
+    # Example: href="mailto:
+    email = tree.xpath('//a[contains(@href, "mailto:")]/@href')
+    # Find name and add to list
+    # Example: <div class="result-listing">
+    #          <h2>Harrison, Tyler</h2>
+    name = tree.xpath('//div[@class="result-listing"]/h2/text()')
+    result = {"name": "", "email": "", "link": link}
+    if email:
+        try:
+            result["email"] = email[0].split(":")[1]
+        except IndexError:
+            result["email"] = email[0]
+        except:
+            result["email"] = "(No email found)"
+    else:
+        result["email"] = "(No email found)"
+    if name:
+        result["name"] = name[0]
+    if result["name"] or result["email"]:
+        return result
+    else:
+        return None
 
 
 def search(search_term):
@@ -28,30 +57,14 @@ def search(search_term):
         print("More than the maximum number of results (50). This is a limitation of the TAMU Directory.")
     print(len(links), "results found")
     print("Checking for emails...\n")
-    for link in links:
-        page = requests.get(link)
-        tree = html.fromstring(page.content)
-        # Find email and add to list
-        # Example: href="mailto:
-        email = tree.xpath('//a[contains(@href, "mailto:")]/@href')
-        # Find name and add to list
-        # Example: <div class="result-listing">
-        #          <h2>Harrison, Tyler</h2>
-        name = tree.xpath('//div[@class="result-listing"]/h2/text()')
-        result = {"name": "", "email": "", "link": link}
-        if email:
-            try:
-                result["email"] = email[0].split(":")[1]
-            except IndexError:
-                result["email"] = email[0]
-            except:
-                result["email"] = "(No email found)"
-        else:
-            result["email"] = "(No email found)"
-        if name:
-            result["name"] = name[0]
-        if result["name"] or result["email"]:
-            results.append(result)
+    threads = []
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        for link in links:
+            threads.append(executor.submit(extract_data_from_url, link))
+        for task in as_completed(threads):
+            results.append(task.result())
+            print(".", end="")
+
     return results
 
 
