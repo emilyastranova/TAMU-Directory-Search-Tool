@@ -63,7 +63,6 @@ def search(search_term):
             threads.append(executor.submit(extract_data_from_url, link))
         for task in as_completed(threads):
             results.append(task.result())
-            print(".", end="")
 
     return results
 
