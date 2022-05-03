@@ -94,9 +94,11 @@ if __name__ == "__main__":
         email = input("Enter email: ")
         for result in results:
             if email in result["email"]:
-                print("Found!\n")
+                print("\nFound!")
+                print("------------------------------\n")
                 print("Name: " + result["name"] + "\n" + "Email: " +
                       result["email"] + "\n" + "Link: " + result["link"] + "\n")
+                print("------------------------------\n")
                 exit()
         print("No results found.")
         exit()
