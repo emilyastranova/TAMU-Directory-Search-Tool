@@ -81,7 +81,7 @@ if __name__ == "__main__":
     results = search(search_term)
     # Print results as name: email
     for result in results:
-        print("Name: " + result["name"] + "\n" + "Email: " +
+        print("Name: " + result["name"] + " - " + "Email: " +
               result["email"] + "\n" + "Link: " + result["link"] + "\n")
 
     # If no results, print error message
